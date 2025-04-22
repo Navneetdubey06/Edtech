@@ -2,10 +2,32 @@
 
 This document provides instructions for setting up the Learning Portal application locally or on a server.
 
-## Required Packages
 
-The application requires the following Python packages:
-```
+## Installation Steps
+
+### 1. Clone the Repository or download as zip
+
+
+### 2. Set Up Virtual Environment 
+python -m venv venv
+source venv/bin/activate  
+
+### 3. Install Dependencies
+pip install -r requirements.txt
+if it doesnt work use this in terminal after entering venv
+'''
+pip install Flask==2.2.5
+Flask-Login==0.6.2
+Flask-SocketIO==5.3.2
+SQLAlchemy==1.4.46
+Werkzeug==2.2.3
+Jinja2==3.1.2
+itsdangerous==2.1.2
+click==8.1.3
+python-dotenv==0.21.0
+eventlet==0.33.3
+requests==2.28.2
+gunicorn==20.1.0
 email-validator==2.0.0
 flask==2.3.3
 flask-login==0.6.2
@@ -17,54 +39,27 @@ sqlalchemy==2.0.21
 stripe==12.0.1
 werkzeug==2.3.7
 wtforms==3.0.1
-```
-
-## Installation Steps
-
-### 1. Clone the Repository
-```bash
-git clone <repository-url>
-cd learning-portal
-```
-
-### 2. Set Up Virtual Environment (Optional but Recommended)
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows, use: venv\Scripts\activate
-```
-
-### 3. Install Dependencies
-```bash
-pip install -r requirements.txt
-```
-
+'''
 ### 4. Set Up Environment Variables
-Create a `.env` file in the root directory with the following variables:
-```
-DATABASE_URL=postgresql://username:password@localhost:5432/learning_portal
-STRIPE_SECRET_KEY=your_stripe_secret_key
-SESSION_SECRET=your_session_secret
-```
+change .env file values
 
 For production, make sure to set a strong random value for `SESSION_SECRET`.
 
 ### 5. Set Up the Database
-```bash
-# Create a PostgreSQL database
-createdb learning_portal
-```
 
+# Create a PostgreSQL database
+createdb learning_portal  #you can use any db name on your pg admin 4(firstly install postgresql)
 When first running the application, the database tables will be created automatically.
 
 ### 6. Run the Application
-```bash
+run in bash
 gunicorn --bind 0.0.0.0:5000 --reuse-port --reload main:app
-```
+
 
 For development, you can also use:
-```bash
+run in bash
 flask run --host=0.0.0.0 --port=5000
-```
+
 
 ## Initial Setup
 
@@ -118,19 +113,3 @@ To test the payment system:
 3. Use any 3-digit CVC code
 4. For more test cards with different behaviors, see https://stripe.com/docs/testing
 
-## Troubleshooting
-
-### Database Connection Issues
-- Verify that PostgreSQL is running
-- Check the DATABASE_URL environment variable
-- Ensure the database exists and is accessible
-
-### Stripe Integration Issues
-- Verify your STRIPE_SECRET_KEY is correct
-- Check that course price IDs are correctly set up
-- Look for webhook errors in the Stripe Dashboard
-
-### Application Errors
-- Check the application logs for detailed error messages
-- Verify all environment variables are set correctly
-- Ensure all dependencies are properly installed

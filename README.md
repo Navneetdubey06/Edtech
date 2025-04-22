@@ -1,44 +1,38 @@
-# Learning Portal
 
 A comprehensive online learning platform built with Flask, featuring course management, student progress tracking, quizzes, and integrated payment processing.
 
 ## Key Features
 
-### For Students
-- **User Authentication**: Secure registration and login system
-- **Course Catalog**: Browse available courses with detailed descriptions
-- **Progress Tracking**: Track completed lessons and performance
-- **Self-Evaluation**: Take quizzes to test knowledge and receive immediate feedback
-- **Payment Integration**: Securely pay for premium courses via Stripe
-- **Personal Dashboard**: Monitor enrollment status and achievements
+1) For Students
+User Authentication: Secure registration and login system
+Course Catalog: Browse available courses with detailed descriptions
+Progress Tracking: Track completed lessons and performance
+Self-Evaluation: Take quizzes to test knowledge and receive immediate feedback
+Payment Integration: Securely pay for premium courses via Stripe
+Personal Dashboard: Monitor enrollment status and achievements
 
-### For Instructors/Admins
-- **Course Management**: Create, edit, and organize courses, chapters, and lessons
-- **Quiz Creation**: Develop assessments with various question types
-- **Student Management**: View student progress and quiz performance
-- **Payment Tracking**: Monitor transactions and revenue
+2) For Instructors/Admins
+Course Management: Create, edit, and organize courses, chapters, and lessons
+Quiz Creation: Develop assessments with various question types
+Student Management: View student progress and quiz performance
+Payment Tracking: Monitor transactions and revenue
 
 ## Technology Stack
 
-- **Backend**: Flask (Python)
-- **Database**: PostgreSQL
-- **ORM**: SQLAlchemy
-- **Authentication**: Flask-Login
-- **Forms**: Flask-WTF, WTForms
-- **Payment Processing**: Stripe API
-- **Frontend**: Bootstrap, HTML, CSS, JavaScript
+Backend: Flask (Python)
+Database: PostgreSQL
+ORM: SQLAlchemy
+Authentication: Flask-Login
+Forms: Flask-WTF, WTForms
+Payment Processing: Stripe API
+Frontend: Bootstrap, HTML, CSS, JavaScript
 
-## Getting Started
 
-For quick setup instructions, refer to:
-- [QUICKSTART.md](QUICKSTART.md) for a rapid setup in the current environment
-- [SETUP_GUIDE.md](SETUP_GUIDE.md) for detailed installation instructions
+
 
 ## Project Structure
 
-The application follows a modular structure:
 
-```
 /
 ├── app.py              # Main Flask application setup
 ├── main.py             # Application entry point
@@ -60,21 +54,8 @@ The application follows a modular structure:
 └── scripts/            # Utility scripts
     ├── make_admin.py   # Script to promote a user to admin
     └── make_admin.sql  # SQL to promote a user to admin
-```
 
-## Admin Setup
 
-After registration, use the provided script to promote your account to admin status:
-
-```bash
-python scripts/make_admin.py your_email@example.com
-```
-
-Or execute the SQL directly:
-
-```sql
-UPDATE users SET role = 1 WHERE email = 'your_email@example.com';
-```
 
 ## Creating Courses
 
@@ -92,6 +73,3 @@ The platform uses Stripe Checkout for payment processing. When creating paid cou
 
 For testing, use Stripe's test cards (e.g., 4242 4242 4242 4242).
 
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
