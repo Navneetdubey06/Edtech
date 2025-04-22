@@ -73,3 +73,17 @@ The platform uses Stripe Checkout for payment processing. When creating paid cou
 
 For testing, use Stripe's test cards (e.g., 4242 4242 4242 4242).
 
+## Deployment on Vercel
+
+This project can be deployed on Vercel using the following steps:
+
+1. Ensure you have the Vercel CLI installed: `npm i -g vercel`
+2. Log in to your Vercel account: `vercel login`
+3. Set the required environment variables in your Vercel project settings manually:
+   - `SESSION_SECRET`
+   - `DATABASE_URL`
+   - `STRIPE_SECRET_KEY`
+4. Deploy the project by running: `vercel --prod`
+
+The `vercel.json` and `wsgi.py` files are configured to run the Flask app with Gunicorn on Vercel.
+
