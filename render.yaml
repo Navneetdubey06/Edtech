@@ -1,8 +1,0 @@
-services:
-  - type: web
-    name: edtech-platform
-    env: python
-    plan: free
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "gunicorn wsgi:application"
-    envVars: []
