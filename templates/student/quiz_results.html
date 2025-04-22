@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}Quiz Results - Learning Portal{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-8 offset-md-2">
+            <h1>Quiz Results</h1>
+            <p class="lead">{{ quiz.title }}</p>
+            
+            <!-- Result Summary -->
+            <div class="card bg-dark mb-4">
+                <div class="card-body text-center">
+                    <h4 class="mb-3">Your Score: {{ quiz_attempt.score }}%</h4>
+                    
+                    <div class="progress mb-4" style="height: 20px;">
+                        <div class="progress-bar {{ 'bg-success' if quiz_attempt.passed else 'bg-danger' }}" 
+                            role="progressbar" 
+                            style="width: {{ quiz_attempt.score }}%" 
+                            aria-valuenow="{{ quiz_attempt.score }}" 
+                            aria-valuemin="0" 
+                            aria-valuemax="100">
+                            {{ quiz_attempt.score }}%
+                        </div>
+                    </div>
+                    
+                    <div>
+                        {% if quiz_attempt.passed %}
+                            <div class="alert alert-success">
+                                <i class="fas fa-check-circle me-2"></i>
+                                <strong>Congratulations!</strong> You passed the quiz.
+                            </div>
+                        {% else %}
+                            <div class="alert alert-danger">
+                                <i class="fas fa-times-circle me-2"></i>
+                                <strong>Sorry!</strong> You did not pass the quiz. Passing score is {{ quiz.passing_score }}%.
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <p class="text-muted">
+                        Attempted on: {{ quiz_attempt.completed_at.strftime('%Y-%m-%d %H:%M') }}
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Question and Answer Review -->
+            <div class="card bg-dark">
+                <div class="card-header">
+                    <h5 class="mb-0">Review Your Answers</h5>
+                </div>
+                <div class="card-body">
+                    {% for question in questions %}
+                        <div class="quiz-question">
+                            <div class="quiz-question-text">
+                                {{ loop.index }}. {{ question.text }}
+                                <small class="text-muted">({{ question.points }} point{{ 's' if question.points != 1 else '' }})</small>
+                            </div>
+                            
+                            <div class="my-3">
+                                {% set user_answer = answers.get(question.id|string, '') %}
+                                
+                                {% if question.question_type == 'mcq' %}
+                                    {% set options = question.options|tojson|fromjson %}
+                                    <p>
+                                        <strong>Your answer:</strong> 
+                                        <span class="{{ 'answer-correct' if user_answer == question.correct_answer else 'answer-incorrect' }}">
+                                            {{ options[user_answer|int] if user_answer and user_answer.isdigit() and user_answer|int < options|length else 'Not answered' }}
+                                            {% if user_answer == question.correct_answer %}
+                                                <i class="fas fa-check-circle ms-1"></i>
+                                            {% else %}
+                                                <i class="fas fa-times-circle ms-1"></i>
+                                            {% endif %}
+                                        </span>
+                                    </p>
+                                    
+                                    {% if user_answer != question.correct_answer %}
+                                        <p>
+                                            <strong>Correct answer:</strong> 
+                                            <span class="answer-correct">
+                                                {{ options[question.correct_answer|int] if question.correct_answer.isdigit() and question.correct_answer|int < options|length else 'Unknown' }}
+                                            </span>
+                                        </p>
+                                    {% endif %}
+                                    
+                                {% elif question.question_type == 'true_false' %}
+                                    <p>
+                                        <strong>Your answer:</strong> 
+                                        <span class="{{ 'answer-correct' if user_answer.lower() == question.correct_answer.lower() else 'answer-incorrect' }}">
+                                            {{ user_answer|capitalize if user_answer else 'Not answered' }}
+                                            {% if user_answer.lower() == question.correct_answer.lower() %}
+                                                <i class="fas fa-check-circle ms-1"></i>
+                                            {% else %}
+                                                <i class="fas fa-times-circle ms-1"></i>
+                                            {% endif %}
+                                        </span>
+                                    </p>
+                                    
+                                    {% if user_answer.lower() != question.correct_answer.lower() %}
+                                        <p>
+                                            <strong>Correct answer:</strong> 
+                                            <span class="answer-correct">
+                                                {{ question.correct_answer|capitalize }}
+                                            </span>
+                                        </p>
+                                    {% endif %}
+                                    
+                                {% elif question.question_type == 'short_answer' %}
+                                    <p>
+                                        <strong>Your answer:</strong> 
+                                        <span class="{{ 'answer-correct' if user_answer.lower() == question.correct_answer.lower() else 'answer-incorrect' }}">
+                                            {{ user_answer if user_answer else 'Not answered' }}
+                                            {% if user_answer.lower() == question.correct_answer.lower() %}
+                                                <i class="fas fa-check-circle ms-1"></i>
+                                            {% else %}
+                                                <i class="fas fa-times-circle ms-1"></i>
+                                            {% endif %}
+                                        </span>
+                                    </p>
+                                    
+                                    {% if user_answer.lower() != question.correct_answer.lower() %}
+                                        <p>
+                                            <strong>Correct answer:</strong> 
+                                            <span class="answer-correct">
+                                                {{ question.correct_answer }}
+                                            </span>
+                                        </p>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- Actions -->
+            <div class="d-flex justify-content-between mt-4">
+                <a href="{{ url_for('courses.course_detail', course_id=course.id) }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i> Back to Course
+                </a>
+                
+                <a href="{{ url_for('quiz.take_quiz', course_id=course.id, chapter_id=chapter.id, quiz_id=quiz.id) }}" class="btn btn-primary">
+                    <i class="fas fa-redo me-1"></i> Retake Quiz
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

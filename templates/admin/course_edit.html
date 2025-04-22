@@ -1,0 +1,571 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Course - Admin - Learning Portal{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>Edit Course</h1>
+            {% if course %}
+                <p class="lead">{{ course.title }}</p>
+            {% endif %}
+        </div>
+        <div class="col-md-4 text-md-end">
+            <a href="{{ url_for('admin.course_management') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Back to Courses
+            </a>
+        </div>
+    </div>
+    
+    {% if course %}
+        <!-- Course Edit Tabs -->
+        <ul class="nav nav-tabs mb-4" id="courseEditTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="details-tab" data-bs-toggle="tab" data-bs-target="#details" type="button" role="tab" aria-controls="details" aria-selected="true">Course Details</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="chapters-tab" data-bs-toggle="tab" data-bs-target="#chapters" type="button" role="tab" aria-controls="chapters" aria-selected="false">Chapters & Lessons</button>
+            </li>
+        </ul>
+        
+        <div class="tab-content" id="courseEditTabsContent">
+            <!-- Course Details Tab -->
+            <div class="tab-pane fade show active" id="details" role="tabpanel" aria-labelledby="details-tab">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="card bg-dark">
+                            <div class="card-header">
+                                <h5 class="mb-0">Course Details</h5>
+                            </div>
+                            <div class="card-body">
+                                <form method="POST" action="{{ url_for('admin.course_edit', course_id=course.id) }}">
+                                    {{ form.hidden_tag() }}
+                                    
+                                    <div class="mb-3">
+                                        <label for="title" class="form-label">Course Title</label>
+                                        {{ form.title(class="form-control", id="title") }}
+                                        {% if form.title.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.title.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="description" class="form-label">Description</label>
+                                        {{ form.description(class="form-control", id="description", rows="6") }}
+                                        {% if form.description.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.description.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label for="price" class="form-label">Price ($)</label>
+                                            {{ form.price(class="form-control", id="price") }}
+                                            {% if form.price.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {% for error in form.price.errors %}
+                                                        {{ error }}
+                                                    {% endfor %}
+                                                </div>
+                                            {% endif %}
+                                            <small class="form-text text-muted">Enter 0 for a free course</small>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="stripe_price_id" class="form-label">Stripe Price ID</label>
+                                            {{ form.stripe_price_id(class="form-control", id="stripe_price_id") }}
+                                            {% if form.stripe_price_id.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {% for error in form.stripe_price_id.errors %}
+                                                        {{ error }}
+                                                    {% endfor %}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-4">
+                                        <label for="image_url" class="form-label">Course Image URL</label>
+                                        {{ form.image_url(class="form-control", id="image_url") }}
+                                        {% if form.image_url.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.image_url.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="d-grid">
+                                        {{ form.submit(class="btn btn-primary") }}
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="card bg-dark">
+                            <div class="card-header">
+                                <h5 class="mb-0">Course Preview</h5>
+                            </div>
+                            <div class="card-body">
+                                {% if course.image_url %}
+                                    <img src="{{ course.image_url }}" class="img-fluid rounded mb-3" alt="{{ course.title }}">
+                                {% else %}
+                                    <div class="bg-secondary rounded d-flex align-items-center justify-content-center mb-3" style="height: 200px;">
+                                        <i class="fas fa-image fa-3x text-light"></i>
+                                    </div>
+                                {% endif %}
+                                
+                                <h5>{{ course.title }}</h5>
+                                <p class="mb-1">
+                                    {% if course.price > 0 %}
+                                        <span class="badge bg-primary">${{ "%.2f"|format(course.price) }}</span>
+                                    {% else %}
+                                        <span class="badge bg-success">Free</span>
+                                    {% endif %}
+                                </p>
+                                <p class="text-muted small">Created on {{ course.created_at.strftime('%Y-%m-%d') }}</p>
+                                
+                                <hr>
+                                
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Enrollments:</span>
+                                    <span>{{ course.enrollments.count() }}</span>
+                                </div>
+                                
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Chapters:</span>
+                                    <span>{{ course.chapters.count() }}</span>
+                                </div>
+                                
+                                {% set lesson_count = namespace(total=0) %}
+                                {% for chapter in course.chapters %}
+                                    {% set lesson_count.total = lesson_count.total + chapter.lessons.count() %}
+                                {% endfor %}
+                                
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Lessons:</span>
+                                    <span>{{ lesson_count.total }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Chapters & Lessons Tab -->
+            <div class="tab-pane fade" id="chapters" role="tabpanel" aria-labelledby="chapters-tab">
+                <div class="row">
+                    <div class="col-md-4 mb-4">
+                        <div class="card bg-dark">
+                            <div class="card-header">
+                                <h5 class="mb-0">Add New Chapter</h5>
+                            </div>
+                            <div class="card-body">
+                                <form method="POST" action="{{ url_for('admin.chapter_create', course_id=course.id) }}">
+                                    {{ form.hidden_tag() }}
+                                    
+                                    <div class="mb-3">
+                                        <label for="chapter_title" class="form-label">Chapter Title</label>
+                                        <input type="text" class="form-control" id="chapter_title" name="title" required>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="chapter_description" class="form-label">Description (Optional)</label>
+                                        <textarea class="form-control" id="chapter_description" name="description" rows="3"></textarea>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="chapter_order" class="form-label">Order</label>
+                                        <input type="number" class="form-control" id="chapter_order" name="order" value="{{ course.chapters.count() }}" min="0" required>
+                                    </div>
+                                    
+                                    <div class="d-grid">
+                                        <button type="submit" class="btn btn-primary">Add Chapter</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-8">
+                        <div class="card bg-dark">
+                            <div class="card-header">
+                                <h5 class="mb-0">Chapters and Lessons</h5>
+                            </div>
+                            <div class="card-body">
+                                {% if chapters %}
+                                    <div id="chapterList" class="list-group">
+                                        {% for chapter in chapters %}
+                                            <div class="list-group-item bg-dark mb-3 p-0 border">
+                                                <div class="p-3 d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <h5 class="mb-1">{{ chapter.order }}. {{ chapter.title }}</h5>
+                                                        {% if chapter.description %}
+                                                            <p class="mb-1 text-muted">{{ chapter.description }}</p>
+                                                        {% endif %}
+                                                    </div>
+                                                    
+                                                    <div class="btn-group" role="group">
+                                                        <button type="button" class="btn btn-sm btn-outline-primary toggle-lessons" data-chapter-id="{{ chapter.id }}">
+                                                            Show Lessons
+                                                        </button>
+                                                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editChapterModal{{ chapter.id }}">
+                                                            <i class="fas fa-edit"></i>
+                                                        </button>
+                                                        <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteChapterModal{{ chapter.id }}">
+                                                            <i class="fas fa-trash-alt"></i>
+                                                        </button>
+                                                    </div>
+                                                    
+                                                    <!-- Edit Chapter Modal -->
+                                                    <div class="modal fade" id="editChapterModal{{ chapter.id }}" tabindex="-1" aria-hidden="true">
+                                                        <div class="modal-dialog">
+                                                            <div class="modal-content bg-dark">
+                                                                <div class="modal-header">
+                                                                    <h5 class="modal-title">Edit Chapter</h5>
+                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                </div>
+                                                                <div class="modal-body">
+                                                                    <form method="POST" action="{{ url_for('admin.chapter_edit', chapter_id=chapter.id) }}">
+                                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                                        
+                                                                        <div class="mb-3">
+                                                                            <label for="edit_chapter_title{{ chapter.id }}" class="form-label">Chapter Title</label>
+                                                                            <input type="text" class="form-control" id="edit_chapter_title{{ chapter.id }}" name="title" value="{{ chapter.title }}" required>
+                                                                        </div>
+                                                                        
+                                                                        <div class="mb-3">
+                                                                            <label for="edit_chapter_description{{ chapter.id }}" class="form-label">Description (Optional)</label>
+                                                                            <textarea class="form-control" id="edit_chapter_description{{ chapter.id }}" name="description" rows="3">{{ chapter.description }}</textarea>
+                                                                        </div>
+                                                                        
+                                                                        <div class="mb-3">
+                                                                            <label for="edit_chapter_order{{ chapter.id }}" class="form-label">Order</label>
+                                                                            <input type="number" class="form-control" id="edit_chapter_order{{ chapter.id }}" name="order" value="{{ chapter.order }}" min="0" required>
+                                                                        </div>
+                                                                        
+                                                                        <div class="d-grid">
+                                                                            <button type="submit" class="btn btn-primary">Update Chapter</button>
+                                                                        </div>
+                                                                    </form>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <!-- Delete Chapter Modal -->
+                                                    <div class="modal fade" id="deleteChapterModal{{ chapter.id }}" tabindex="-1" aria-hidden="true">
+                                                        <div class="modal-dialog">
+                                                            <div class="modal-content bg-dark">
+                                                                <div class="modal-header">
+                                                                    <h5 class="modal-title">Confirm Deletion</h5>
+                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                </div>
+                                                                <div class="modal-body">
+                                                                    <p>Are you sure you want to delete the chapter <strong>{{ chapter.title }}</strong>?</p>
+                                                                    <p class="text-danger">This will delete all lessons in this chapter as well.</p>
+                                                                </div>
+                                                                <div class="modal-footer">
+                                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                                    <form method="POST" action="{{ url_for('admin.chapter_delete', chapter_id=chapter.id) }}">
+                                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                                        <button type="submit" class="btn btn-danger">Delete Chapter</button>
+                                                                    </form>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Lessons List -->
+                                                <div id="lessons-{{ chapter.id }}" class="lessons-list p-3 border-top" style="display: none;">
+                                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                                        <h6 class="mb-0">Lessons</h6>
+                                                        <div>
+                                                            <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addLessonModal{{ chapter.id }}">
+                                                                <i class="fas fa-plus me-1"></i> Add Lesson
+                                                            </button>
+                                                            <button type="button" class="btn btn-sm btn-outline-primary ms-1" data-bs-toggle="modal" data-bs-target="#addQuizModal{{ chapter.id }}">
+                                                                <i class="fas fa-plus me-1"></i> Add Quiz
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    {% if chapter.lessons.count() > 0 %}
+                                                        <ul class="list-group">
+                                                            {% for lesson in chapter.lessons %}
+                                                                <li class="list-group-item bg-dark d-flex justify-content-between align-items-center">
+                                                                    <div>
+                                                                        <span class="me-2">{{ lesson.order }}.</span>
+                                                                        <i class="fas {% if lesson.content_type == 'video' %}fa-video{% elif lesson.content_type == 'pdf' %}fa-file-pdf{% else %}fa-file-alt{% endif %} me-2"></i>
+                                                                        {{ lesson.title }}
+                                                                        {% if lesson.estimated_time %}
+                                                                            <small class="text-muted ms-2">{{ lesson.estimated_time }} min</small>
+                                                                        {% endif %}
+                                                                    </div>
+                                                                    <div class="btn-group" role="group">
+                                                                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editLessonModal{{ lesson.id }}">
+                                                                            <i class="fas fa-edit"></i>
+                                                                        </button>
+                                                                        <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteLessonModal{{ lesson.id }}">
+                                                                            <i class="fas fa-trash-alt"></i>
+                                                                        </button>
+                                                                    </div>
+                                                                    
+                                                                    <!-- Edit Lesson Modal -->
+                                                                    <div class="modal fade" id="editLessonModal{{ lesson.id }}" tabindex="-1" aria-hidden="true">
+                                                                        <div class="modal-dialog modal-lg">
+                                                                            <div class="modal-content bg-dark">
+                                                                                <div class="modal-header">
+                                                                                    <h5 class="modal-title">Edit Lesson</h5>
+                                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                                </div>
+                                                                                <div class="modal-body">
+                                                                                    <form method="POST" action="{{ url_for('admin.lesson_edit', lesson_id=lesson.id) }}">
+                                                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                                                        
+                                                                                        <div class="mb-3">
+                                                                                            <label for="edit_lesson_title{{ lesson.id }}" class="form-label">Lesson Title</label>
+                                                                                            <input type="text" class="form-control" id="edit_lesson_title{{ lesson.id }}" name="title" value="{{ lesson.title }}" required>
+                                                                                        </div>
+                                                                                        
+                                                                                        <div class="mb-3">
+                                                                                            <label for="edit_lesson_content{{ lesson.id }}" class="form-label">Content</label>
+                                                                                            <textarea class="form-control" id="edit_lesson_content{{ lesson.id }}" name="content" rows="10">{{ lesson.content }}</textarea>
+                                                                                        </div>
+                                                                                        
+                                                                                        <div class="row mb-3">
+                                                                                            <div class="col-md-6">
+                                                                                                <label for="edit_lesson_content_type{{ lesson.id }}" class="form-label">Content Type</label>
+                                                                                                <select class="form-select" id="edit_lesson_content_type{{ lesson.id }}" name="content_type">
+                                                                                                    <option value="text" {% if lesson.content_type == 'text' %}selected{% endif %}>Text</option>
+                                                                                                    <option value="video" {% if lesson.content_type == 'video' %}selected{% endif %}>Video</option>
+                                                                                                    <option value="pdf" {% if lesson.content_type == 'pdf' %}selected{% endif %}>PDF</option>
+                                                                                                </select>
+                                                                                            </div>
+                                                                                            <div class="col-md-6">
+                                                                                                <label for="edit_lesson_video_url{{ lesson.id }}" class="form-label">Video URL (if applicable)</label>
+                                                                                                <input type="url" class="form-control" id="edit_lesson_video_url{{ lesson.id }}" name="video_url" value="{{ lesson.video_url }}">
+                                                                                            </div>
+                                                                                        </div>
+                                                                                        
+                                                                                        <div class="row mb-3">
+                                                                                            <div class="col-md-6">
+                                                                                                <label for="edit_lesson_order{{ lesson.id }}" class="form-label">Order</label>
+                                                                                                <input type="number" class="form-control" id="edit_lesson_order{{ lesson.id }}" name="order" value="{{ lesson.order }}" min="0" required>
+                                                                                            </div>
+                                                                                            <div class="col-md-6">
+                                                                                                <label for="edit_lesson_estimated_time{{ lesson.id }}" class="form-label">Estimated Time (minutes)</label>
+                                                                                                <input type="number" class="form-control" id="edit_lesson_estimated_time{{ lesson.id }}" name="estimated_time" value="{{ lesson.estimated_time }}" min="0">
+                                                                                            </div>
+                                                                                        </div>
+                                                                                        
+                                                                                        <div class="d-grid">
+                                                                                            <button type="submit" class="btn btn-primary">Update Lesson</button>
+                                                                                        </div>
+                                                                                    </form>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    
+                                                                    <!-- Delete Lesson Modal -->
+                                                                    <div class="modal fade" id="deleteLessonModal{{ lesson.id }}" tabindex="-1" aria-hidden="true">
+                                                                        <div class="modal-dialog">
+                                                                            <div class="modal-content bg-dark">
+                                                                                <div class="modal-header">
+                                                                                    <h5 class="modal-title">Confirm Deletion</h5>
+                                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                                </div>
+                                                                                <div class="modal-body">
+                                                                                    <p>Are you sure you want to delete the lesson <strong>{{ lesson.title }}</strong>?</p>
+                                                                                </div>
+                                                                                <div class="modal-footer">
+                                                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                                                    <form method="POST" action="{{ url_for('admin.lesson_delete', lesson_id=lesson.id) }}">
+                                                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                                                        <button type="submit" class="btn btn-danger">Delete Lesson</button>
+                                                                                    </form>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </li>
+                                                            {% endfor %}
+                                                        </ul>
+                                                    {% else %}
+                                                        <p class="text-muted">No lessons added to this chapter yet.</p>
+                                                    {% endif %}
+                                                    
+                                                    <!-- Quizzes List -->
+                                                    {% if chapter.quizzes.count() > 0 %}
+                                                        <h6 class="mt-3 mb-2">Quizzes</h6>
+                                                        <ul class="list-group">
+                                                            {% for quiz in chapter.quizzes %}
+                                                                <li class="list-group-item bg-dark d-flex justify-content-between align-items-center">
+                                                                    <div>
+                                                                        <i class="fas fa-question-circle me-2"></i>
+                                                                        {{ quiz.title }}
+                                                                        <span class="badge bg-info ms-2">{{ quiz.questions.count() }} questions</span>
+                                                                    </div>
+                                                                    <div class="btn-group" role="group">
+                                                                        <a href="{{ url_for('quiz.quiz_edit', quiz_id=quiz.id) }}" class="btn btn-sm btn-outline-primary">
+                                                                            <i class="fas fa-edit"></i> Edit
+                                                                        </a>
+                                                                        <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteQuizModal{{ quiz.id }}">
+                                                                            <i class="fas fa-trash-alt"></i>
+                                                                        </button>
+                                                                    </div>
+                                                                    
+                                                                    <!-- Delete Quiz Modal -->
+                                                                    <div class="modal fade" id="deleteQuizModal{{ quiz.id }}" tabindex="-1" aria-hidden="true">
+                                                                        <div class="modal-dialog">
+                                                                            <div class="modal-content bg-dark">
+                                                                                <div class="modal-header">
+                                                                                    <h5 class="modal-title">Confirm Deletion</h5>
+                                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                                </div>
+                                                                                <div class="modal-body">
+                                                                                    <p>Are you sure you want to delete the quiz <strong>{{ quiz.title }}</strong>?</p>
+                                                                                    <p class="text-danger">This will delete all questions and student attempts for this quiz.</p>
+                                                                                </div>
+                                                                                <div class="modal-footer">
+                                                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                                                    <form method="POST" action="{{ url_for('quiz.quiz_delete', quiz_id=quiz.id) }}">
+                                                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                                                        <button type="submit" class="btn btn-danger">Delete Quiz</button>
+                                                                                    </form>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </li>
+                                                            {% endfor %}
+                                                        </ul>
+                                                    {% endif %}
+                                                    
+                                                    <!-- Add Lesson Modal -->
+                                                    <div class="modal fade" id="addLessonModal{{ chapter.id }}" tabindex="-1" aria-hidden="true">
+                                                        <div class="modal-dialog modal-lg">
+                                                            <div class="modal-content bg-dark">
+                                                                <div class="modal-header">
+                                                                    <h5 class="modal-title">Add New Lesson</h5>
+                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                </div>
+                                                                <div class="modal-body">
+                                                                    <form method="POST" action="{{ url_for('admin.lesson_create', chapter_id=chapter.id) }}">
+                                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                                        
+                                                                        <div class="mb-3">
+                                                                            <label for="lesson_title{{ chapter.id }}" class="form-label">Lesson Title</label>
+                                                                            <input type="text" class="form-control" id="lesson_title{{ chapter.id }}" name="title" required>
+                                                                        </div>
+                                                                        
+                                                                        <div class="mb-3">
+                                                                            <label for="lesson_content{{ chapter.id }}" class="form-label">Content</label>
+                                                                            <textarea class="form-control" id="lesson_content{{ chapter.id }}" name="content" rows="10"></textarea>
+                                                                        </div>
+                                                                        
+                                                                        <div class="row mb-3">
+                                                                            <div class="col-md-6">
+                                                                                <label for="lesson_content_type{{ chapter.id }}" class="form-label">Content Type</label>
+                                                                                <select class="form-select" id="lesson_content_type{{ chapter.id }}" name="content_type">
+                                                                                    <option value="text">Text</option>
+                                                                                    <option value="video">Video</option>
+                                                                                    <option value="pdf">PDF</option>
+                                                                                </select>
+                                                                            </div>
+                                                                            <div class="col-md-6">
+                                                                                <label for="lesson_video_url{{ chapter.id }}" class="form-label">Video URL (if applicable)</label>
+                                                                                <input type="url" class="form-control" id="lesson_video_url{{ chapter.id }}" name="video_url">
+                                                                            </div>
+                                                                        </div>
+                                                                        
+                                                                        <div class="row mb-3">
+                                                                            <div class="col-md-6">
+                                                                                <label for="lesson_order{{ chapter.id }}" class="form-label">Order</label>
+                                                                                <input type="number" class="form-control" id="lesson_order{{ chapter.id }}" name="order" value="{{ chapter.lessons.count() }}" min="0" required>
+                                                                            </div>
+                                                                            <div class="col-md-6">
+                                                                                <label for="lesson_estimated_time{{ chapter.id }}" class="form-label">Estimated Time (minutes)</label>
+                                                                                <input type="number" class="form-control" id="lesson_estimated_time{{ chapter.id }}" name="estimated_time" min="0">
+                                                                            </div>
+                                                                        </div>
+                                                                        
+                                                                        <div class="d-grid">
+                                                                            <button type="submit" class="btn btn-primary">Add Lesson</button>
+                                                                        </div>
+                                                                    </form>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <!-- Add Quiz Modal -->
+                                                    <div class="modal fade" id="addQuizModal{{ chapter.id }}" tabindex="-1" aria-hidden="true">
+                                                        <div class="modal-dialog">
+                                                            <div class="modal-content bg-dark">
+                                                                <div class="modal-header">
+                                                                    <h5 class="modal-title">Add New Quiz</h5>
+                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                </div>
+                                                                <div class="modal-body">
+                                                                    <form method="POST" action="{{ url_for('quiz.quiz_create', chapter_id=chapter.id) }}">
+                                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                                        
+                                                                        <div class="mb-3">
+                                                                            <label for="quiz_title{{ chapter.id }}" class="form-label">Quiz Title</label>
+                                                                            <input type="text" class="form-control" id="quiz_title{{ chapter.id }}" name="title" required>
+                                                                        </div>
+                                                                        
+                                                                        <div class="mb-3">
+                                                                            <label for="quiz_description{{ chapter.id }}" class="form-label">Description</label>
+                                                                            <textarea class="form-control" id="quiz_description{{ chapter.id }}" name="description" rows="3"></textarea>
+                                                                        </div>
+                                                                        
+                                                                        <div class="mb-3">
+                                                                            <label for="quiz_passing_score{{ chapter.id }}" class="form-label">Passing Score (%)</label>
+                                                                            <input type="number" class="form-control" id="quiz_passing_score{{ chapter.id }}" name="passing_score" value="70" min="0" max="100" required>
+                                                                        </div>
+                                                                        
+                                                                        <div class="d-grid">
+                                                                            <button type="submit" class="btn btn-primary">Create Quiz</button>
+                                                                        </div>
+                                                                    </form>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <div class="alert alert-info">
+                                        <p class="mb-0">No chapters added to this course yet. Add your first chapter to get started.</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="alert alert-danger">
+            <p class="mb-0">Course not found.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

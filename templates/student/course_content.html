@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}{{ lesson.title }} - {{ course.title }} - Learning Portal{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar with lesson navigation -->
+        <div class="col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse">
+            <div class="position-sticky pt-3">
+                <h6 class="sidebar-heading px-3 mt-4 mb-1 text-muted">
+                    <a href="{{ url_for('courses.course_detail', course_id=course.id) }}" class="text-decoration-none text-muted">
+                        <i class="fas fa-arrow-left me-1"></i> Back to Course
+                    </a>
+                </h6>
+                
+                <h5 class="px-3 mt-4 mb-2">{{ course.title }}</h5>
+                
+                <div class="progress mx-3 mb-3" style="height: 8px;">
+                    {% set total_lessons = namespace(count=0, completed=0) %}
+                    {% for ch in all_chapters %}
+                        {% for lesson in chapter_lessons.get(ch.id, []) %}
+                            {% set total_lessons.count = total_lessons.count + 1 %}
+                            {% for prog in lesson.progress %}
+                                {% if prog.user_id == session.user_id and prog.completed %}
+                                    {% set total_lessons.completed = total_lessons.completed + 1 %}
+                                {% endif %}
+                            {% endfor %}
+                        {% endfor %}
+                    {% endfor %}
+                    
+                    {% if total_lessons.count > 0 %}
+                        {% set progress_percent = (total_lessons.completed / total_lessons.count) * 100 %}
+                    {% else %}
+                        {% set progress_percent = 0 %}
+                    {% endif %}
+                    
+                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ progress_percent }}%" aria-valuenow="{{ progress_percent }}" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+                
+                <div class="lesson-list">
+                    {% for ch in all_chapters %}
+                        <div class="chapter-item">
+                            <p class="px-3 py-2 mb-1 fw-bold">{{ ch.title }}</p>
+                            <ul class="nav flex-column">
+                                {% for l in chapter_lessons.get(ch.id, []) %}
+                                    <li class="nav-item">
+                                        <a class="nav-link px-3 py-2 {% if l.id == lesson.id %}active bg-primary{% endif %}" href="{{ url_for('courses.course_content', course_id=course.id, chapter_id=ch.id, lesson_id=l.id) }}">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <i class="fas {% if l.content_type == 'video' %}fa-video{% elif l.content_type == 'pdf' %}fa-file-pdf{% else %}fa-file-alt{% endif %} me-2"></i>
+                                                    {{ l.title }}
+                                                </div>
+                                                {% set lesson_completed = false %}
+                                                {% for prog in l.progress %}
+                                                    {% if prog.user_id == session.user_id and prog.completed %}
+                                                        {% set lesson_completed = true %}
+                                                    {% endif %}
+                                                {% endfor %}
+                                                
+                                                {% if lesson_completed %}
+                                                    <i class="fas fa-check-circle text-success"></i>
+                                                {% endif %}
+                                            </div>
+                                        </a>
+                                    </li>
+                                {% endfor %}
+                                
+                                {% for quiz in ch.quizzes %}
+                                    <li class="nav-item">
+                                        <a class="nav-link px-3 py-2" href="{{ url_for('quiz.take_quiz', course_id=course.id, chapter_id=ch.id, quiz_id=quiz.id) }}">
+                                            <i class="fas fa-question-circle me-2"></i>
+                                            {{ quiz.title }} (Quiz)
+                                        </a>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main content area -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">{{ lesson.title }}</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    {% if not progress.completed %}
+                        <form id="completeForm" method="POST" action="{{ url_for('courses.complete_lesson', course_id=course.id, chapter_id=chapter.id, lesson_id=lesson.id) }}">
+                            <button id="markAsComplete" type="submit" class="btn btn-success">
+                                <i class="fas fa-check me-1"></i> Mark as Complete
+                            </button>
+                        </form>
+                    {% else %}
+                        <span class="badge bg-success p-2">
+                            <i class="fas fa-check-circle me-1"></i> Completed
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="lesson-content mb-5">
+                <!-- Video content -->
+                {% if lesson.content_type == 'video' and lesson.video_url %}
+                    <div class="lesson-video-container mb-4">
+                        <iframe src="{{ lesson.video_url }}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    </div>
+                {% endif %}
+                
+                <!-- Text content -->
+                <div id="lessonContent">
+                    {{ lesson.content|safe }}
+                </div>
+            </div>
+            
+            <!-- Navigation between lessons -->
+            <div class="d-flex justify-content-between mt-4 pt-4 border-top">
+                {% if prev_lesson %}
+                    <a href="{{ url_for('courses.course_content', course_id=course.id, chapter_id=prev_lesson.chapter_id, lesson_id=prev_lesson.id) }}" class="btn btn-outline-primary">
+                        <i class="fas fa-chevron-left me-1"></i> Previous Lesson
+                    </a>
+                {% else %}
+                    <div></div>
+                {% endif %}
+                
+                {% if next_lesson %}
+                    <a href="{{ url_for('courses.course_content', course_id=course.id, chapter_id=next_lesson.chapter_id, lesson_id=next_lesson.id) }}" class="btn btn-primary">
+                        Next Lesson <i class="fas fa-chevron-right ms-1"></i>
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('courses.course_detail', course_id=course.id) }}" class="btn btn-primary">
+                        Finish Chapter <i class="fas fa-flag-checkered ms-1"></i>
+                    </a>
+                {% endif %}
+            </div>
+        </main>
+    </div>
+</div>
+{% endblock %}

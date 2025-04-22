@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}Create Course - Admin - Learning Portal{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1>Create New Course</h1>
+            <p class="lead">Set up the basic information for your new course.</p>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card bg-dark">
+                <div class="card-header">
+                    <h5 class="mb-0">Course Details</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('admin.course_create') }}">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Course Title</label>
+                            {{ form.title(class="form-control", id="title", placeholder="Enter course title") }}
+                            {% if form.title.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.title.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            {{ form.description(class="form-control", id="description", rows="6", placeholder="Enter course description") }}
+                            {% if form.description.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.description.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="price" class="form-label">Price ($)</label>
+                                {{ form.price(class="form-control", id="price", placeholder="0.00") }}
+                                {% if form.price.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.price.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <small class="form-text text-muted">Enter 0 for a free course</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="stripe_price_id" class="form-label">Stripe Price ID (Optional)</label>
+                                {{ form.stripe_price_id(class="form-control", id="stripe_price_id", placeholder="price_xxxxxxxxxxxx") }}
+                                {% if form.stripe_price_id.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.stripe_price_id.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <small class="form-text text-muted">If left empty, a new price will be created.</small>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="image_url" class="form-label">Course Image URL</label>
+                            {{ form.image_url(class="form-control", id="image_url", placeholder="https://example.com/image.jpg") }}
+                            {% if form.image_url.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.image_url.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Enter a URL for the course thumbnail image.</small>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('admin.course_management') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-1"></i> Back to Courses
+                            </a>
+                            
+                            {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

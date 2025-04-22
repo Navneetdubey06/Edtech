@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}Edit User - Admin - Learning Portal{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1>Edit User</h1>
+            <p class="lead">Update user information</p>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card bg-dark">
+                <div class="card-header">
+                    <h5 class="mb-0">User Details</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('admin.user_edit', user_id=user.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="username" class="form-label">Username</label>
+                                <input type="text" class="form-control" id="username" name="username" value="{{ user.username }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}" required>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="first_name" class="form-label">First Name</label>
+                                <input type="text" class="form-control" id="first_name" name="first_name" value="{{ user.first_name }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="last_name" class="form-label">Last Name</label>
+                                <input type="text" class="form-control" id="last_name" name="last_name" value="{{ user.last_name }}" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="role" class="form-label">Role</label>
+                            <select class="form-select" id="role" name="role">
+                                <option value="0" {% if user.role == 0 %}selected{% endif %}>Student</option>
+                                <option value="1" {% if user.role == 1 %}selected{% endif %}>Admin</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="password" class="form-label">Password (leave blank to keep current)</label>
+                            <input type="password" class="form-control" id="password" name="password">
+                            <small class="form-text text-muted">Only fill this if you want to change the user's password.</small>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('admin.user_management') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-1"></i> Back to Users
+                            </a>
+                            <button type="submit" class="btn btn-primary">Update User</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% if user.role == 0 %}
+        <div class="row mt-4">
+            <div class="col-md-8 offset-md-2">
+                <div class="card bg-dark">
+                    <div class="card-header">
+                        <h5 class="mb-0">Enrolled Courses</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if user.enrollments.count() > 0 %}
+                            <div class="table-responsive">
+                                <table class="table table-dark">
+                                    <thead>
+                                        <tr>
+                                            <th>Course</th>
+                                            <th>Enrolled Date</th>
+                                            <th>Last Accessed</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for enrollment in user.enrollments %}
+                                            {% set course = enrollment.course %}
+                                            <tr>
+                                                <td>
+                                                    <a href="{{ url_for('admin.course_edit', course_id=course.id) }}">
+                                                        {{ course.title }}
+                                                    </a>
+                                                </td>
+                                                <td>{{ enrollment.enrolled_date.strftime('%Y-%m-%d') }}</td>
+                                                <td>{{ enrollment.last_accessed.strftime('%Y-%m-%d %H:%M') }}</td>
+                                                <td>
+                                                    {% if enrollment.completed %}
+                                                        <span class="badge bg-success">Completed</span>
+                                                    {% else %}
+                                                        <span class="badge bg-warning">In Progress</span>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <p class="text-muted">This user is not enrolled in any courses.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-md-8 offset-md-2">
+                <div class="card bg-dark">
+                    <div class="card-header">
+                        <h5 class="mb-0">Quiz Attempts</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if user.quiz_attempts.count() > 0 %}
+                            <div class="table-responsive">
+                                <table class="table table-dark">
+                                    <thead>
+                                        <tr>
+                                            <th>Quiz</th>
+                                            <th>Date</th>
+                                            <th>Score</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for attempt in user.quiz_attempts %}
+                                            {% set quiz = attempt.quiz %}
+                                            <tr>
+                                                <td>{{ quiz.title }}</td>
+                                                <td>{{ attempt.completed_at.strftime('%Y-%m-%d %H:%M') if attempt.completed_at else 'Incomplete' }}</td>
+                                                <td>{{ attempt.score }}%</td>
+                                                <td>
+                                                    {% if attempt.passed %}
+                                                        <span class="badge bg-success">Passed</span>
+                                                    {% elif attempt.score is not none %}
+                                                        <span class="badge bg-danger">Failed</span>
+                                                    {% else %}
+                                                        <span class="badge bg-secondary">Incomplete</span>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <p class="text-muted">This user has not attempted any quizzes.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

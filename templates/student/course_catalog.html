@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Course Catalog - Learning Portal{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1>Course Catalog</h1>
+            <p class="lead">Browse our selection of courses and enroll to start your learning journey.</p>
+        </div>
+    </div>
+    
+    <!-- Search and Filter -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                <input type="text" id="courseSearch" class="form-control" placeholder="Search courses...">
+            </div>
+        </div>
+    </div>
+    
+    <!-- Course Listing -->
+    <div class="row">
+        {% if courses %}
+            {% for course in courses %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card course-card bg-dark h-100">
+                        {% if course.image_url %}
+                            <img src="{{ course.image_url }}" class="card-img-top course-image" alt="{{ course.title }}">
+                        {% else %}
+                            <div class="card-img-top course-image bg-secondary d-flex align-items-center justify-content-center">
+                                <i class="fas fa-book fa-3x text-light"></i>
+                            </div>
+                        {% endif %}
+                        <div class="card-body">
+                            <h5 class="card-title">{{ course.title }}</h5>
+                            <p class="card-text">{{ course.description|truncate(100) }}</p>
+                            
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="fs-5">
+                                    {% if course.price > 0 %}
+                                        ${{ "%.2f"|format(course.price) }}
+                                    {% else %}
+                                        <span class="badge bg-success">Free</span>
+                                    {% endif %}
+                                </span>
+                                
+                                {% if course.id in enrolled_course_ids %}
+                                    <a href="{{ url_for('courses.course_detail', course_id=course.id) }}" class="btn btn-outline-primary">
+                                        Continue Learning
+                                    </a>
+                                {% else %}
+                                    <a href="{{ url_for('courses.course_detail', course_id=course.id) }}" class="btn btn-primary">
+                                        View Details
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="card-footer text-muted">
+                            {% set chapters = course.chapters.count() %}
+                            {{ chapters }} chapter{% if chapters != 1 %}s{% endif %}
+                            
+                            <!-- Get total lessons -->
+                            {% set lesson_count = namespace(total=0) %}
+                            {% for chapter in course.chapters %}
+                                {% set lesson_count.total = lesson_count.total + chapter.lessons.count() %}
+                            {% endfor %}
+                            • {{ lesson_count.total }} lesson{% if lesson_count.total != 1 %}s{% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <p class="mb-0">No courses available at the moment. Please check back later.</p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

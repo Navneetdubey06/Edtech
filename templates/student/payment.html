@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}Checkout - {{ course.title }} - Learning Portal{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1>Checkout</h1>
+            <p class="lead">Complete your enrollment for {{ course.title }}.</p>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card bg-dark payment-card">
+                <div class="card-body">
+                    <h3 class="card-title">Order Summary</h3>
+                    
+                    <div class="d-flex justify-content-between align-items-center py-3 border-bottom">
+                        <div>
+                            <h5>{{ course.title }}</h5>
+                            <p class="text-muted mb-0">Full course access</p>
+                        </div>
+                        <div class="fs-4">
+                            ${{ "%.2f"|format(course.price) }}
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center py-3">
+                        <div>
+                            <h5>Total</h5>
+                        </div>
+                        <div class="payment-total">
+                            ${{ "%.2f"|format(course.price) }}
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <form id="payment-form" method="POST" action="{{ url_for('payments.create_checkout_session') }}">
+                            <input type="hidden" name="course_id" value="{{ course.id }}">
+                            
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="terms" required>
+                                <label class="form-check-label" for="terms">
+                                    I agree to the <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">terms and conditions</a>
+                                </label>
+                            </div>
+                            
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-lock me-1"></i> Proceed to Payment
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card bg-dark">
+                <div class="card-body">
+                    <h5 class="card-title">Course Details</h5>
+                    
+                    {% if course.image_url %}
+                        <img src="{{ course.image_url }}" class="img-fluid rounded mb-3" alt="{{ course.title }}">
+                    {% endif %}
+                    
+                    <p>{{ course.description|truncate(150) }}</p>
+                    
+                    <hr>
+                    
+                    <h6>What's included:</h6>
+                    <ul class="list-unstyled">
+                        {% set chapter_count = course.chapters.count() %}
+                        <li><i class="fas fa-check-circle text-success me-2"></i> {{ chapter_count }} chapter{{ 's' if chapter_count != 1 else '' }}</li>
+                        
+                        {% set lesson_count = namespace(total=0) %}
+                        {% for chapter in course.chapters %}
+                            {% set lesson_count.total = lesson_count.total + chapter.lessons.count() %}
+                        {% endfor %}
+                        <li><i class="fas fa-check-circle text-success me-2"></i> {{ lesson_count.total }} lesson{{ 's' if lesson_count.total != 1 else '' }}</li>
+                        
+                        {% set quiz_count = namespace(total=0) %}
+                        {% for chapter in course.chapters %}
+                            {% set quiz_count.total = quiz_count.total + chapter.quizzes.count() %}
+                        {% endfor %}
+                        <li><i class="fas fa-check-circle text-success me-2"></i> {{ quiz_count.total }} quiz{{ 'zes' if quiz_count.total != 1 else '' }}</li>
+                        
+                        <li><i class="fas fa-check-circle text-success me-2"></i> Full lifetime access</li>
+                        <li><i class="fas fa-check-circle text-success me-2"></i> Progress tracking</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Terms and Conditions Modal -->
+<div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content bg-dark">
+            <div class="modal-header">
+                <h5 class="modal-title" id="termsModalLabel">Terms and Conditions</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <h5>Learning Portal Terms of Service</h5>
+                <p>By purchasing this course, you agree to the following terms:</p>
+                
+                <h6>1. Course Access</h6>
+                <p>Upon successful payment, you will gain access to all course materials. Access is granted for the lifetime of the course on our platform.</p>
+                
+                <h6>2. Payment and Refunds</h6>
+                <p>All payments are processed securely via Stripe. Refunds may be requested within 30 days of purchase if you are not satisfied with the course content.</p>
+                
+                <h6>3. Usage Restrictions</h6>
+                <p>Course materials are for personal use only and may not be shared, distributed, or reproduced without permission.</p>
+                
+                <h6>4. Account Security</h6>
+                <p>You are responsible for maintaining the security of your account and password.</p>
+                
+                <h6>5. Privacy Policy</h6>
+                <p>Your personal information will be handled in accordance with our Privacy Policy.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">I Understand</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}Learning Portal - Home{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Hero Section -->
+    <div class="row align-items-center py-5">
+        <div class="col-lg-6">
+            <h1 class="display-4 fw-bold">Expand Your Knowledge</h1>
+            <p class="lead">Welcome to our Learning Portal, where you can access high-quality courses, assess your knowledge, and track your progress.</p>
+            <div class="d-grid gap-2 d-md-flex justify-content-md-start mt-4">
+                {% if not session.get('user_id') %}
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg px-4 me-md-2">Get Started</a>
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-outline-secondary btn-lg px-4">Login</a>
+                {% else %}
+                    <a href="{{ url_for('courses.course_catalog') }}" class="btn btn-primary btn-lg px-4 me-md-2">Browse Courses</a>
+                    <a href="{{ url_for('courses.student_dashboard') }}" class="btn btn-outline-secondary btn-lg px-4">My Dashboard</a>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-lg-6 d-none d-lg-block text-center">
+            <svg class="img-fluid" width="500" height="400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Learning Placeholder" preserveAspectRatio="xMidYMid meet" viewBox="0 0 700 500">
+                <title>Learning Graphic</title>
+                <rect width="100%" height="100%" fill="#5a5a5a" stroke="none" />
+                <g fill="#fff">
+                    <path d="M350 150c-25 0-45 20-45 45s20 45 45 45 45-20 45-45-20-45-45-45zm0 80c-19.3 0-35-15.7-35-35s15.7-35 35-35 35 15.7 35 35-15.7 35-35 35z"/>
+                    <path d="M350 250c-40.8 0-73.9 33.1-73.9 73.9 0 4.3 0.4 8.5 1.2 12.6 11.6 18.6 32.1 31 55.5 31h34.3c23.4 0 44-12.4 55.5-31 0.8-4.1 1.2-8.3 1.2-12.6 0.1-40.8-33-73.9-73.8-73.9z"/>
+                    <path d="M500 120h-80c-5.5 0-10 4.5-10 10v60c0 5.5 4.5 10 10 10h80c5.5 0 10-4.5 10-10v-60c0-5.5-4.5-10-10-10zm0 70h-80v-60h80v60z"/>
+                    <path d="M500 220h-80c-5.5 0-10 4.5-10 10v60c0 5.5 4.5 10 10 10h80c5.5 0 10-4.5 10-10v-60c0-5.5-4.5-10-10-10zm0 70h-80v-60h80v60z"/>
+                    <path d="M500 320h-80c-5.5 0-10 4.5-10 10v60c0 5.5 4.5 10 10 10h80c5.5 0 10-4.5 10-10v-60c0-5.5-4.5-10-10-10zm0 70h-80v-60h80v60z"/>
+                    <path d="M280 120h-80c-5.5 0-10 4.5-10 10v60c0 5.5 4.5 10 10 10h80c5.5 0 10-4.5 10-10v-60c0-5.5-4.5-10-10-10zm0 70h-80v-60h80v60z"/>
+                    <rect x="170" y="150" width="70" height="10" rx="5" ry="5"/>
+                    <rect x="200" y="320" width="300" height="10" rx="5" ry="5"/>
+                    <rect x="200" y="350" width="300" height="10" rx="5" ry="5"/>
+                    <rect x="200" y="380" width="200" height="10" rx="5" ry="5"/>
+                    <rect x="410" y="150" width="70" height="10" rx="5" ry="5"/>
+                    <rect x="410" y="250" width="70" height="10" rx="5" ry="5"/>
+                    <rect x="410" y="350" width="70" height="10" rx="5" ry="5"/>
+                </g>
+            </svg>
+        </div>
+    </div>
+    
+    <!-- Features Section -->
+    <div class="row py-5">
+        <div class="col-12 text-center mb-4">
+            <h2>Why Choose Our Learning Portal?</h2>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 bg-dark">
+                <div class="card-body text-center">
+                    <i class="fas fa-chalkboard-teacher fa-3x mb-3 text-primary"></i>
+                    <h4 class="card-title">High-Quality Courses</h4>
+                    <p class="card-text">Access courses with well-structured content, videos, and interactive materials to enhance your learning experience.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 bg-dark">
+                <div class="card-body text-center">
+                    <i class="fas fa-chart-line fa-3x mb-3 text-primary"></i>
+                    <h4 class="card-title">Progress Tracking</h4>
+                    <p class="card-text">Track your learning progress with visual indicators and completion status for each course and chapter.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 bg-dark">
+                <div class="card-body text-center">
+                    <i class="fas fa-tasks fa-3x mb-3 text-primary"></i>
+                    <h4 class="card-title">Self-Assessment</h4>
+                    <p class="card-text">Test your knowledge with quizzes and assessments for each course chapter with instant feedback.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Call to Action Section -->
+    <div class="row py-5 bg-dark rounded">
+        <div class="col-12 text-center">
+            <h2 class="mb-4">Ready to Start Learning?</h2>
+            <p class="lead mb-4">Join our learning platform today and take the first step towards your educational goals.</p>
+            {% if not session.get('user_id') %}
+                <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg">Create Your Account</a>
+            {% else %}
+                <a href="{{ url_for('courses.course_catalog') }}" class="btn btn-primary btn-lg">Explore Courses</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

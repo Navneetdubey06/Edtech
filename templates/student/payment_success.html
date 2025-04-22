@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}Payment Successful - Learning Portal{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card bg-dark text-center">
+                <div class="card-body py-5">
+                    <div class="mb-4">
+                        <i class="fas fa-check-circle text-success fa-5x"></i>
+                    </div>
+                    
+                    <h1 class="mb-4">Payment Successful!</h1>
+                    
+                    <p class="lead">Thank you for your purchase. You have successfully enrolled in:</p>
+                    
+                    <h3 class="my-4">{{ course.title }}</h3>
+                    
+                    <p>Your enrollment has been confirmed and you now have full access to the course materials.</p>
+                    
+                    <div class="mt-5">
+                        <a href="{{ url_for('courses.course_detail', course_id=course.id) }}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-play-circle me-1"></i> Start Learning
+                        </a>
+                        
+                        <a href="{{ url_for('courses.student_dashboard') }}" class="btn btn-outline-secondary btn-lg ms-2">
+                            <i class="fas fa-tachometer-alt me-1"></i> Go to Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

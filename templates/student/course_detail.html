@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block title %}{{ course.title }} - Learning Portal{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>{{ course.title }}</h1>
+            
+            {% if is_enrolled %}
+                <span class="badge bg-success mb-3">Enrolled</span>
+            {% endif %}
+            
+            <p class="lead">{{ course.description }}</p>
+            
+            <div class="d-flex align-items-center mb-4">
+                <div class="me-4">
+                    <strong>Price:</strong>
+                    {% if course.price > 0 %}
+                        <span class="fs-4 text-primary">${{ "%.2f"|format(course.price) }}</span>
+                    {% else %}
+                        <span class="badge bg-success">Free</span>
+                    {% endif %}
+                </div>
+                
+                {% if not is_enrolled %}
+                    <a href="{{ url_for('payments.enroll', course_id=course.id) }}" class="btn btn-primary btn-lg">
+                        {% if course.price > 0 %}
+                            Enroll Now
+                        {% else %}
+                            Enroll for Free
+                        {% endif %}
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('courses.course_content', course_id=course.id, chapter_id=chapters[0].id if chapters else 0, lesson_id=chapters[0].lessons.first().id if chapters and chapters[0].lessons.count() > 0 else 0) }}" class="btn btn-success btn-lg">
+                        Continue Learning
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card bg-dark mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Course Details</h5>
+                    <ul class="list-group list-group-flush bg-dark">
+                        <li class="list-group-item bg-dark d-flex justify-content-between">
+                            <span>Chapters:</span>
+                            <span class="fw-bold">{{ chapters|length }}</span>
+                        </li>
+                        <li class="list-group-item bg-dark d-flex justify-content-between">
+                            <span>Lessons:</span>
+                            <span class="fw-bold">
+                                {% set lesson_count = namespace(total=0) %}
+                                {% for chapter in chapters %}
+                                    {% set lesson_count.total = lesson_count.total + chapter.lessons.count() %}
+                                {% endfor %}
+                                {{ lesson_count.total }}
+                            </span>
+                        </li>
+                        <li class="list-group-item bg-dark d-flex justify-content-between">
+                            <span>Quizzes:</span>
+                            <span class="fw-bold">
+                                {% set quiz_count = namespace(total=0) %}
+                                {% for chapter in chapters %}
+                                    {% set quiz_count.total = quiz_count.total + chapter.quizzes.count() %}
+                                {% endfor %}
+                                {{ quiz_count.total }}
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            {% if course.image_url %}
+                <img src="{{ course.image_url }}" class="img-fluid rounded" alt="{{ course.title }}">
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Course Content Overview -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card bg-dark">
+                <div class="card-header">
+                    <h4 class="mb-0">Course Content</h4>
+                </div>
+                <div class="card-body">
+                    {% if chapters %}
+                        <div class="accordion" id="chaptersAccordion">
+                            {% for chapter in chapters %}
+                                <div class="accordion-item bg-dark">
+                                    <h2 class="accordion-header" id="heading{{ chapter.id }}">
+                                        <button class="accordion-button bg-dark text-white {% if not loop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ chapter.id }}" aria-expanded="{{ 'true' if loop.first else 'false' }}" aria-controls="collapse{{ chapter.id }}">
+                                            {{ chapter.title }}
+                                        </button>
+                                    </h2>
+                                    <div id="collapse{{ chapter.id }}" class="accordion-collapse collapse {% if loop.first %}show{% endif %}" aria-labelledby="heading{{ chapter.id }}" data-bs-parent="#chaptersAccordion">
+                                        <div class="accordion-body">
+                                            {% if chapter.description %}
+                                                <p>{{ chapter.description }}</p>
+                                            {% endif %}
+                                            
+                                            <ul class="list-group list-group-flush bg-dark">
+                                                {% for lesson in chapter.lessons %}
+                                                    <li class="list-group-item bg-dark d-flex justify-content-between align-items-center">
+                                                        <div>
+                                                            <i class="fas {% if lesson.content_type == 'video' %}fa-video{% elif lesson.content_type == 'pdf' %}fa-file-pdf{% else %}fa-file-alt{% endif %} me-2"></i>
+                                                            {{ lesson.title }}
+                                                            {% if lesson.estimated_time %}
+                                                                <small class="text-muted ms-2">{{ lesson.estimated_time }} min</small>
+                                                            {% endif %}
+                                                        </div>
+                                                        
+                                                        {% if is_enrolled %}
+                                                            <a href="{{ url_for('courses.course_content', course_id=course.id, chapter_id=chapter.id, lesson_id=lesson.id) }}" class="btn btn-sm btn-outline-primary">
+                                                                View
+                                                            </a>
+                                                        {% else %}
+                                                            <span class="badge bg-secondary">
+                                                                <i class="fas fa-lock"></i>
+                                                            </span>
+                                                        {% endif %}
+                                                    </li>
+                                                {% endfor %}
+                                                
+                                                {% for quiz in chapter.quizzes %}
+                                                    <li class="list-group-item bg-dark d-flex justify-content-between align-items-center">
+                                                        <div>
+                                                            <i class="fas fa-question-circle me-2"></i>
+                                                            {{ quiz.title }} (Quiz)
+                                                        </div>
+                                                        
+                                                        {% if is_enrolled %}
+                                                            <a href="{{ url_for('quiz.take_quiz', course_id=course.id, chapter_id=chapter.id, quiz_id=quiz.id) }}" class="btn btn-sm btn-outline-primary">
+                                                                Take Quiz
+                                                            </a>
+                                                        {% else %}
+                                                            <span class="badge bg-secondary">
+                                                                <i class="fas fa-lock"></i>
+                                                            </span>
+                                                        {% endif %}
+                                                    </li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            No content available for this course yet.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Enrollment CTA -->
+    {% if not is_enrolled %}
+        <div class="row mt-5">
+            <div class="col-12">
+                <div class="card bg-primary text-white text-center p-4">
+                    <h3>Ready to start learning?</h3>
+                    <p class="lead">Enroll now to access all course materials, quizzes, and track your progress.</p>
+                    <div class="mt-3">
+                        <a href="{{ url_for('payments.enroll', course_id=course.id) }}" class="btn btn-light btn-lg">
+                            {% if course.price > 0 %}
+                                Enroll for ${{ "%.2f"|format(course.price) }}
+                            {% else %}
+                                Enroll for Free
+                            {% endif %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

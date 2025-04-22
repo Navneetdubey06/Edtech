@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block title %}Payment Management - Admin - Learning Portal{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1>Payment Management</h1>
+            <p class="lead">Track and manage all payment transactions.</p>
+        </div>
+    </div>
+    
+    <!-- Payment Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <h4>Total Revenue</h4>
+                <div class="stat-value">
+                    ${{ total_revenue|default('0.00') }}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <h4>Completed Payments</h4>
+                <div class="stat-value">
+                    {{ completed_payments|default(0) }}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <h4>Pending Payments</h4>
+                <div class="stat-value">
+                    {{ pending_payments|default(0) }}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <h4>Failed Payments</h4>
+                <div class="stat-value">
+                    {{ failed_payments|default(0) }}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filter Controls -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-dark">
+                <div class="card-body">
+                    <form method="GET" action="{{ url_for('admin.payment_management') }}" class="row g-3 align-items-end">
+                        <div class="col-md-3">
+                            <label for="status" class="form-label">Payment Status</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="">All Statuses</option>
+                                <option value="completed" {% if request.args.get('status') == 'completed' %}selected{% endif %}>Completed</option>
+                                <option value="pending" {% if request.args.get('status') == 'pending' %}selected{% endif %}>Pending</option>
+                                <option value="failed" {% if request.args.get('status') == 'failed' %}selected{% endif %}>Failed</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="course" class="form-label">Course</label>
+                            <select class="form-select" id="course" name="course_id">
+                                <option value="">All Courses</option>
+                                {% for course in courses %}
+                                    <option value="{{ course.id }}" {% if request.args.get('course_id')|int == course.id %}selected{% endif %}>{{ course.title }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="start_date" class="form-label">Start Date</label>
+                            <input type="date" class="form-control" id="start_date" name="start_date" value="{{ request.args.get('start_date', '') }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="end_date" class="form-label">End Date</label>
+                            <input type="date" class="form-control" id="end_date" name="end_date" value="{{ request.args.get('end_date', '') }}">
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-filter me-1"></i> Filter
+                            </button>
+                            <a href="{{ url_for('admin.payment_management') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-1"></i> Clear Filters
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Payment List -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card bg-dark">
+                <div class="card-header">
+                    <h5 class="mb-0">Payment Transactions</h5>
+                </div>
+                <div class="card-body">
+                    {% if payment_data %}
+                        <div class="table-responsive">
+                            <table class="table table-dark admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Student</th>
+                                        <th>Course</th>
+                                        <th>Amount</th>
+                                        <th>Date</th>
+                                        <th>Payment ID</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in payment_data %}
+                                        <tr>
+                                            <td>{{ item.payment.id }}</td>
+                                            <td>
+                                                <a href="{{ url_for('admin.user_edit', user_id=item.user.id) }}">
+                                                    {{ item.user.first_name }} {{ item.user.last_name }}
+                                                </a>
+                                            </td>
+                                            <td>
+                                                <a href="{{ url_for('admin.course_edit', course_id=item.course.id) }}">
+                                                    {{ item.course.title }}
+                                                </a>
+                                            </td>
+                                            <td>${{ "%.2f"|format(item.payment.amount) }}</td>
+                                            <td>{{ item.payment.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                            <td>
+                                                <small>{{ item.payment.stripe_payment_id|truncate(15) }}</small>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-{{ 'success' if item.payment.status == 'completed' else 'warning' if item.payment.status == 'pending' else 'danger' }}">
+                                                    {{ item.payment.status|capitalize }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            <p class="mb-0">No payment records found.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Revenue Chart -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card bg-dark">
+                <div class="card-header">
+                    <h5 class="mb-0">Monthly Revenue</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Placeholder data, in a real app this would be dynamic from DB -->
+                    {% set revenue_months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'] %}
+                    {% set revenue_data = [560, 840, 720, 1200, 1450, 1680] %}
+                    
+                    <canvas id="revenueChart" 
+                            data-months="{{ revenue_months|tojson }}"
+                            data-revenue="{{ revenue_data|tojson }}">
+                    </canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+{% endblock %}
+{% endblock %}

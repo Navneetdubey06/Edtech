@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}Student Dashboard - Learning Portal{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1>Welcome, {{ user.first_name }}!</h1>
+            <p class="lead">Track your learning progress and continue your courses.</p>
+        </div>
+    </div>
+    
+    <!-- Overview Stats -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="stat-card">
+                <h4>Enrolled Courses</h4>
+                <div class="stat-value">{{ courses_data|length }}</div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="stat-card">
+                <h4>Completed Courses</h4>
+                <div class="stat-value">
+                    {{ courses_data|selectattr('enrollment.completed', 'eq', true)|list|length }}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="stat-card">
+                <h4>Average Progress</h4>
+                <div class="stat-value">
+                    {% if courses_data|length > 0 %}
+                        {{ (courses_data|sum(attribute='progress') / courses_data|length)|round|int }}%
+                    {% else %}
+                        0%
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Progress Chart -->
+    {% if courses_data %}
+        <div class="row mb-5">
+            <div class="col-12">
+                <div class="card bg-dark">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Course Progress</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="courseProgressChart" 
+                                data-labels="{{ courses_data|map(attribute='course.title')|list|tojson }}"
+                                data-values="{{ courses_data|map(attribute='progress')|list|tojson }}">
+                        </canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+    
+    <!-- My Courses -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2>My Courses</h2>
+        </div>
+    </div>
+    
+    {% if courses_data %}
+        <div class="row">
+            {% for course_item in courses_data %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card course-card bg-dark h-100">
+                        {% if course_item.course.image_url %}
+                            <img src="{{ course_item.course.image_url }}" class="card-img-top course-image" alt="{{ course_item.course.title }}">
+                        {% else %}
+                            <div class="card-img-top course-image bg-secondary d-flex align-items-center justify-content-center">
+                                <i class="fas fa-book fa-3x text-light"></i>
+                            </div>
+                        {% endif %}
+                        <div class="card-body">
+                            <h5 class="card-title">{{ course_item.course.title }}</h5>
+                            <div class="progress mb-3">
+                                <div class="progress-bar bg-success" role="progressbar" 
+                                    style="width: {{ course_item.progress }}%" 
+                                    aria-valuenow="{{ course_item.progress }}" 
+                                    aria-valuemin="0" 
+                                    aria-valuemax="100">
+                                    {{ course_item.progress|round|int }}%
+                                </div>
+                            </div>
+                            <p class="card-text">
+                                {% if course_item.enrollment.completed %}
+                                    <span class="badge bg-success">Completed</span>
+                                {% elif course_item.progress > 0 %}
+                                    <span class="badge bg-warning">In Progress</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Not Started</span>
+                                {% endif %}
+                                <small class="text-muted ms-2">Last accessed: 
+                                    {{ course_item.enrollment.last_accessed.strftime('%Y-%m-%d') }}
+                                </small>
+                            </p>
+                            <a href="{{ url_for('courses.course_detail', course_id=course_item.course.id) }}" class="btn btn-primary">
+                                {% if course_item.progress > 0 %}
+                                    Continue Learning
+                                {% else %}
+                                    Start Course
+                                {% endif %}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="row">
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <p class="mb-0">You are not enrolled in any courses yet. <a href="{{ url_for('courses.course_catalog') }}">Browse our catalog</a> to find courses to enroll in.</p>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+    
+    <!-- Find New Courses CTA -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card bg-dark text-center p-4">
+                <h3>Ready to learn something new?</h3>
+                <p class="lead">Explore our catalog to find more courses that match your interests.</p>
+                <div class="mt-3">
+                    <a href="{{ url_for('courses.course_catalog') }}" class="btn btn-primary btn-lg">Browse All Courses</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+{% endblock %}
+{% endblock %}
